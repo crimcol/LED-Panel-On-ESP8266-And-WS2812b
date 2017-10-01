@@ -13,6 +13,12 @@ This example may be copied under the terms of the MIT license, see the LICENSE f
 #include "ArtnetWifi.h"
 #include <Adafruit_NeoPixel.h>
 
+#include <ESP8266WebServer.h>
+#include <ESP8266HTTPUpdateServer.h>
+
+ESP8266WebServer httpServer(80);
+ESP8266HTTPUpdateServer httpUpdater;
+
 //Wifi settings
 const char* ssid = "Link";
 const char* password = "homecrimnet";
@@ -85,6 +91,7 @@ void initTest()
   for (int i = 0 ; i < numLeds ; i++)
     leds.setPixelColor(i, 0, 0, 0);
   leds.show();
+  Serial.println("initTest. Done.");
 }
 
 void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* data)
@@ -128,6 +135,13 @@ void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* d
   }
 }
 
+void setupHttpUpdate()
+{
+  httpUpdater.setup(&httpServer);
+  httpServer.begin();  
+  Serial.println("setupHttpUpdate. Done.");
+}
+
 void setup()
 {
   Serial.begin(115200);
@@ -135,6 +149,7 @@ void setup()
   artnet.begin();
   leds.begin();
   initTest();
+  setupHttpUpdate();
 
   // this will be called for each packet received
   artnet.setArtDmxCallback(onDmxFrame);
@@ -142,6 +157,7 @@ void setup()
 
 void loop()
 {
+  httpServer.handleClient();
   // we call the read function inside the loop
   artnet.read();
 }
