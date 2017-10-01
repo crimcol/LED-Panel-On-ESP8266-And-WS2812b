@@ -18,7 +18,7 @@ const char* ssid = "Link";
 const char* password = "homecrimnet";
 
 // Neopixel settings
-const int numLeds = 210; // change for your setup
+const int numLeds = 420; // change for your setup
 const int numberOfChannels = numLeds * 3; // Total number of channels you want to receive (1 led = 3 channels)
 const byte dataPin = 3;
 Adafruit_NeoPixel leds = Adafruit_NeoPixel(numLeds, dataPin, NEO_GRB + NEO_KHZ800);
