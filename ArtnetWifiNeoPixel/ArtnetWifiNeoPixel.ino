@@ -11,6 +11,8 @@ This example may be copied under the terms of the MIT license, see the LICENSE f
 #endif
 #include <WiFiUdp.h>
 #include "ArtnetWifi.h"
+#include <Adafruit_GFX.h>
+#include <Adafruit_NeoMatrix.h>
 #include <Adafruit_NeoPixel.h>
 
 #include <ESP8266WebServer.h>
@@ -20,14 +22,22 @@ ESP8266WebServer httpServer(80);
 ESP8266HTTPUpdateServer httpUpdater;
 
 //Wifi settings
-const char* ssid = "Link";
-const char* password = "homecrimnet";
+//const char* ssid = "Link";
+//const char* password = "homecrimnet";
+const char* ssid = "Blizzard";
+const char* password = "windows95";
 
 // Neopixel settings
 const int numLeds = 420; // change for your setup
 const int numberOfChannels = numLeds * 3; // Total number of channels you want to receive (1 led = 3 channels)
 const byte dataPin = 3;
-Adafruit_NeoPixel leds = Adafruit_NeoPixel(numLeds, dataPin, NEO_GRB + NEO_KHZ800);
+//Adafruit_NeoPixel leds = Adafruit_NeoPixel(numLeds, dataPin, NEO_GRB + NEO_KHZ800);
+
+// Neomatrix settings
+Adafruit_NeoMatrix ledMatrix = Adafruit_NeoMatrix(30, 14, dataPin,
+  NEO_MATRIX_TOP     + NEO_MATRIX_LEFT +
+  NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG,
+  NEO_GRB            + NEO_KHZ800);
 
 // Artnet settings
 ArtnetWifi artnet;
@@ -66,6 +76,8 @@ boolean ConnectWifi(void)
     Serial.println(ssid);
     Serial.print("IP address: ");
     Serial.println(WiFi.localIP());
+    Serial.print("MAC: ");
+    Serial.println(WiFi.macAddress());
   } else {
     Serial.println("");
     Serial.println("Connection failed.");
@@ -74,90 +86,158 @@ boolean ConnectWifi(void)
   return state;
 }
 
-void initTest()
+//void initTest()
+//{
+//  for (int i = 0 ; i < numLeds ; i++)
+//    leds.setPixelColor(i, 127, 0, 0);
+//  leds.show();
+//  delay(500);
+//  for (int i = 0 ; i < numLeds ; i++)
+//    leds.setPixelColor(i, 0, 127, 0);
+//  leds.show();
+//  delay(500);
+//  for (int i = 0 ; i < numLeds ; i++)
+//    leds.setPixelColor(i, 0, 0, 127);
+//  leds.show();
+//  delay(500);
+//  for (int i = 0 ; i < numLeds ; i++)
+//    leds.setPixelColor(i, 0, 0, 0);
+//  leds.show();
+//  Serial.println("initTest. Done.");
+//}
+
+void initTest2()
 {
-  for (int i = 0 ; i < numLeds ; i++)
-    leds.setPixelColor(i, 127, 0, 0);
-  leds.show();
-  delay(500);
-  for (int i = 0 ; i < numLeds ; i++)
-    leds.setPixelColor(i, 0, 127, 0);
-  leds.show();
-  delay(500);
-  for (int i = 0 ; i < numLeds ; i++)
-    leds.setPixelColor(i, 0, 0, 127);
-  leds.show();
-  delay(500);
-  for (int i = 0 ; i < numLeds ; i++)
-    leds.setPixelColor(i, 0, 0, 0);
-  leds.show();
-  Serial.println("initTest. Done.");
+  showText("initTest2");
+  Serial.println("initTest2. Done.");
 }
 
-void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* data)
-{
-  sendFrame = 1;
-  // set brightness of the whole strip 
-  if (universe == 15)
-  {
-    leds.setBrightness(data[0]);
-    leds.show();
-  }
+void showText(String text){
+  ledMatrix.setBrightness(40);
+  ledMatrix.fillScreen(ledMatrix.Color(0, 0, 0));
+  ledMatrix.setTextColor(ledMatrix.Color(0, 255, 0));
+  ledMatrix.setCursor(0, 0);
+  ledMatrix.setTextWrap(true);
+  ledMatrix.print(text);
+  ledMatrix.show();
+}
 
-  // Store which universe has got in
-  if ((universe - startUniverse) < maxUniverses)
-    universesReceived[universe - startUniverse] = 1;
-
-  for (int i = 0 ; i < maxUniverses ; i++)
-  {
-    if (universesReceived[i] == 0)
-    {
-      //Serial.println("Broke");
-      sendFrame = 0;
-      break;
-    }
-  }
-
-  // read universe and put into the right part of the display buffer
-  for (int i = 0; i < length / 3; i++)
-  {
-    int led = i + (universe - startUniverse) * (previousDataLength / 3);
-    if (led < numLeds)
-      leds.setPixelColor(led, data[i * 3], data[i * 3 + 1], data[i * 3 + 2]);
-  }
-  previousDataLength = length;     
+void scrollText(String textToDisplay) {
+  int x = ledMatrix.width();
   
-  if (sendFrame)
-  {
-    leds.show();
-    // Reset universeReceived to 0
-    memset(universesReceived, 0, maxUniverses);
+  // Account for 6 pixel wide characters plus a space
+  int pixelsInText = textToDisplay.length() * 6;
+
+  ledMatrix.setTextWrap(false);
+  ledMatrix.setCursor(x, 0);
+  ledMatrix.print(textToDisplay);
+  ledMatrix.show();
+  
+  while(x > (ledMatrix.width() - pixelsInText)) {
+    ledMatrix.fillScreen(ledMatrix.Color(0, 0, 0));
+    ledMatrix.setCursor(--x, 0);
+    ledMatrix.print(textToDisplay);
+    ledMatrix.show();
+    delay(100);
   }
 }
+
+//void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* data)
+//{
+//  sendFrame = 1;
+//  // set brightness of the whole strip 
+//  if (universe == 15)
+//  {
+//    leds.setBrightness(data[0]);
+//    leds.show();
+//  }
+//
+//  // Store which universe has got in
+//  if ((universe - startUniverse) < maxUniverses)
+//    universesReceived[universe - startUniverse] = 1;
+//
+//  for (int i = 0 ; i < maxUniverses ; i++)
+//  {
+//    if (universesReceived[i] == 0)
+//    {
+//      //Serial.println("Broke");
+//      sendFrame = 0;
+//      break;
+//    }
+//  }
+//
+//  // read universe and put into the right part of the display buffer
+//  for (int i = 0; i < length / 3; i++)
+//  {
+//    int led = i + (universe - startUniverse) * (previousDataLength / 3);
+//    if (led < numLeds)
+//      leds.setPixelColor(led, data[i * 3], data[i * 3 + 1], data[i * 3 + 2]);
+//  }
+//  previousDataLength = length;     
+//  
+//  if (sendFrame)
+//  {
+//    leds.show();
+//    // Reset universeReceived to 0
+//    memset(universesReceived, 0, maxUniverses);
+//  }
+//}
 
 void setupHttpUpdate()
 {
   httpUpdater.setup(&httpServer);
+  httpServer.on("/", HTTP_GET, handleRoot);
+  httpServer.on("/command", HTTP_POST, handleCommand);
   httpServer.begin();  
   Serial.println("setupHttpUpdate. Done.");
+}
+
+static const char updateTextHtml[] PROGMEM =
+        R"(<html><body><form method='POST' action='command' enctype='multipart/form-data'>
+                  <input type='text' name='text' placeholder='Any text'>
+                  <br/>
+                  <input type='text' name='scrolltext' placeholder='Scrolling text'>
+                  <br/>
+                  <input type='submit' value='Send'>
+               </form>
+         </body></html>)";
+
+void handleRoot() {
+  httpServer.send(200, "text/html", updateTextHtml);
+}
+
+void handleCommand() {
+  String argText = httpServer.arg("text");
+  String argScrollText = httpServer.arg("scrolltext");
+  if(argText.length() > 0){
+    showText(argText);
+  }
+  if(argScrollText.length() > 0){
+    scrollText(argScrollText);
+    showText(argScrollText);
+  }
+  httpServer.send(200, "text/html", updateTextHtml);
 }
 
 void setup()
 {
   Serial.begin(115200);
+  ledMatrix.begin();
+  showText("Wifi...");
   ConnectWifi();
-  artnet.begin();
-  leds.begin();
-  initTest();
+  //artnet.begin();
+  //leds.begin();
+  //initTest();
+  initTest2();
   setupHttpUpdate();
-
+  showText("Hello");
   // this will be called for each packet received
-  artnet.setArtDmxCallback(onDmxFrame);
+  //artnet.setArtDmxCallback(onDmxFrame);
 }
 
 void loop()
 {
   httpServer.handleClient();
   // we call the read function inside the loop
-  artnet.read();
+  //artnet.read();
 }
