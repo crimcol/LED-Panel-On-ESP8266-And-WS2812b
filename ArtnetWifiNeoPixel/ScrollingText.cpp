@@ -20,6 +20,11 @@ bool ScrollingText::IsWaitCompleted(int targetMs)
 
 bool ScrollingText::IsWaitCompleted(int incrementMs, int targetMs)
 {
+	if (targetMs == 0)
+	{
+		return false;
+	}
+
 	WaitIncrement(incrementMs);
 	if (IsWaitCompleted(targetMs))
 	{
@@ -38,7 +43,7 @@ ScrollingText::ScrollingText(Adafruit_NeoMatrix * matrix)
 void ScrollingText::SetText(String text)
 {
 	this->Text = text;
-	this->currentTextPosition = 30;
+	//this->PositionX = 30;
 	this->textPixelLength = this->Text.length() * 6;
 }
 
@@ -46,11 +51,11 @@ void ScrollingText::OnUpdate(int ms)
 {
 	if (IsWaitCompleted(ms, TargetSpeedMs))
 	{
-		currentTextPosition--;
+		PositionX--;
 
-		if (currentTextPosition <= -textPixelLength)
+		if (PositionX <= -textPixelLength)
 		{
-			currentTextPosition = 30;
+			PositionX = 30;
 		}
 
 	}
@@ -60,7 +65,7 @@ void ScrollingText::Render(Adafruit_NeoMatrix * matrix)
 {
 	matrix->setTextWrap(false);
 	matrix->setTextColor(TextColor);
-	matrix->setCursor(currentTextPosition, TextLine * 7);
+	matrix->setCursor(PositionX, PositionY);
 	matrix->print(this->Text);
 }
 

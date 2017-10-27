@@ -60,6 +60,7 @@ Ticker frameTicker;
 RenderEngine renderEngine(&ledMatrix);
 ScrollingText scrollingText(&ledMatrix);
 ScrollingText scrollingTextLine2(&ledMatrix);
+ScrollingText middleTextMiddle(&ledMatrix);
 
 // connect to wifi – returns true if successful or false if not
 boolean ConnectWifi(void)
@@ -210,6 +211,8 @@ static const char updateTextHtml[] PROGMEM =
                   <br/>
                   <input type='text' name='scrolltext' placeholder='Scrolling text'>
                   <br/>
+			      <input type='text' name='middletext' placeholder='Middle text'>
+                  <br/>
 				  <input type='text' name='scrolltext2' placeholder='Scrolling text line 2'>
                   <br/>
                   <input type='submit' value='Send'>
@@ -223,16 +226,17 @@ void handleRoot() {
 void handleCommand() {
   String argText = httpServer.arg("text");
   String argScrollText = httpServer.arg("scrolltext");
+  String argMiddleText = httpServer.arg("middletext");
   String argScrollText2 = httpServer.arg("scrolltext2");
+
   if(argText.length() > 0){
     showText(argText);
   }
-  if(argScrollText.length() > 0){
-	  scrollingText.SetText(argScrollText);
-  }
-  if (argScrollText2.length() > 0) {
-	  scrollingTextLine2.SetText(argScrollText2);
-  }
+
+  scrollingText.SetText(argScrollText);
+  middleTextMiddle.SetText(argMiddleText);
+  scrollingTextLine2.SetText(argScrollText2);
+
   httpServer.send(200, "text/html", updateTextHtml);
 }
 
@@ -259,11 +263,19 @@ void setup()
 
   scrollingTextLine2.SetText("Line 2");
   scrollingTextLine2.TargetSpeedMs = 40;
-  scrollingTextLine2.TextLine = 1;
+  scrollingTextLine2.PositionY = 7;
   scrollingTextLine2.TextColor = ledMatrix.Color(0, 255, 255);
+
+  middleTextMiddle.SetText("Static");
+  middleTextMiddle.TargetSpeedMs = 0;
+  middleTextMiddle.PositionX = 0;
+  middleTextMiddle.PositionY = 3;
+  middleTextMiddle.TextColor = ledMatrix.Color(255, 255, 0);
 
   renderEngine.AddObject(&scrollingText);
   renderEngine.AddObject(&scrollingTextLine2);
+  renderEngine.AddObject(&middleTextMiddle);
+
   frameTicker.attach_ms(tickerMs, frameUpdate);
 
   showText("Hello");

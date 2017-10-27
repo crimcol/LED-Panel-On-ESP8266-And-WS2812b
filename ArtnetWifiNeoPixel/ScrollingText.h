@@ -14,8 +14,8 @@
 class ScrollingText : public RenderObject
 {
 private:
-	int currentTextPosition;
-	int textPixelLength;
+	//int currentTextPosition;
+	int textPixelLength = 0;
 	String Text;
 
 	int targetWaitMs = 500;
@@ -25,11 +25,13 @@ private:
 	bool IsWaitCompleted(int targetMs);
 
 public:
-	ScrollingText(Adafruit_NeoMatrix * matrix);
-	void SetText(String text);
-	int TextLine = 0;
+	int PositionY = 0;
+	int PositionX = 0;
 	int TargetSpeedMs = 120;
 	uint16_t TextColor;
+
+	ScrollingText(Adafruit_NeoMatrix * matrix);
+	void SetText(String text);
 	// Inherited via RenderObject
 	virtual void OnUpdate(int ms) override;
 
