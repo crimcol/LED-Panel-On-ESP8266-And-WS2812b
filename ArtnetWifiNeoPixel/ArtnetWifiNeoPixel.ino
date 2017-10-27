@@ -5,12 +5,17 @@ This example may be copied under the terms of the MIT license, see the LICENSE f
 */
 
 #if defined(ARDUINO_ARCH_ESP32)
+#include "ScrollingText.h"
 #include <WiFi.h>
 #else
 #include <ESP8266WiFi.h>
 #endif
-#include <WiFiUdp.h>
+
 #include "ArtnetWifi.h"
+#include "RenderEngine.h"
+#include "ScrollingText.h"
+#include "Ticker\Ticker.h"
+#include <WiFiUdp.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_NeoMatrix.h>
 #include <Adafruit_NeoPixel.h>
@@ -48,6 +53,13 @@ const int maxUniverses = numberOfChannels / 512 + ((numberOfChannels % 512) ? 1 
 bool universesReceived[maxUniverses];
 bool sendFrame = 1;
 int previousDataLength = 0;
+
+//RenderObjects
+const int tickerMs = 40;
+Ticker frameTicker;
+RenderEngine renderEngine(&ledMatrix);
+ScrollingText scrollingText(&ledMatrix);
+ScrollingText scrollingTextLine2(&ledMatrix);
 
 // connect to wifi – returns true if successful or false if not
 boolean ConnectWifi(void)
@@ -198,6 +210,8 @@ static const char updateTextHtml[] PROGMEM =
                   <br/>
                   <input type='text' name='scrolltext' placeholder='Scrolling text'>
                   <br/>
+				  <input type='text' name='scrolltext2' placeholder='Scrolling text line 2'>
+                  <br/>
                   <input type='submit' value='Send'>
                </form>
          </body></html>)";
@@ -209,14 +223,21 @@ void handleRoot() {
 void handleCommand() {
   String argText = httpServer.arg("text");
   String argScrollText = httpServer.arg("scrolltext");
+  String argScrollText2 = httpServer.arg("scrolltext2");
   if(argText.length() > 0){
     showText(argText);
   }
   if(argScrollText.length() > 0){
-    scrollText(argScrollText);
-    showText(argScrollText);
+	  scrollingText.SetText(argScrollText);
+  }
+  if (argScrollText2.length() > 0) {
+	  scrollingTextLine2.SetText(argScrollText2);
   }
   httpServer.send(200, "text/html", updateTextHtml);
+}
+
+void frameUpdate() {
+	renderEngine.FrameUpdate(tickerMs);
 }
 
 void setup()
@@ -230,9 +251,22 @@ void setup()
   //initTest();
   initTest2();
   setupHttpUpdate();
-  showText("Hello");
+  
   // this will be called for each packet received
   //artnet.setArtDmxCallback(onDmxFrame);
+
+  scrollingText.SetText("scrolling test text");
+
+  scrollingTextLine2.SetText("Line 2");
+  scrollingTextLine2.TargetSpeedMs = 40;
+  scrollingTextLine2.TextLine = 1;
+  scrollingTextLine2.TextColor = ledMatrix.Color(0, 255, 255);
+
+  renderEngine.AddObject(&scrollingText);
+  renderEngine.AddObject(&scrollingTextLine2);
+  frameTicker.attach_ms(tickerMs, frameUpdate);
+
+  showText("Hello");
 }
 
 void loop()
