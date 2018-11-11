@@ -14,7 +14,7 @@ This example may be copied under the terms of the MIT license, see the LICENSE f
 #include "ArtnetWifi.h"
 #include "RenderEngine.h"
 #include "ScrollingText.h"
-#include "Ticker\Ticker.h"
+#include <Ticker.h>
 #include <WiFiUdp.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_NeoMatrix.h>
@@ -29,8 +29,8 @@ ESP8266HTTPUpdateServer httpUpdater;
 //Wifi settings
 //const char* ssid = "Link";
 //const char* password = "homecrimnet";
-const char* ssid = "Blizzard";
-const char* password = "windows95";
+const char* ssid = "crimcol2G";
+const char* password = "homecrimnet";
 
 // Neopixel settings
 const int numLeds = 420; // change for your setup
