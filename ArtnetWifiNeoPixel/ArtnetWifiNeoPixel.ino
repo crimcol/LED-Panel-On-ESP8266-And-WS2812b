@@ -22,15 +22,10 @@ This example may be copied under the terms of the MIT license, see the LICENSE f
 
 #include <ESP8266WebServer.h>
 #include <ESP8266HTTPUpdateServer.h>
+#include <WiFiManager.h> 
 
 ESP8266WebServer httpServer(80);
 ESP8266HTTPUpdateServer httpUpdater;
-
-//Wifi settings
-//const char* ssid = "Link";
-//const char* password = "homecrimnet";
-const char* ssid = "crimcol2G";
-const char* password = "homecrimnet";
 
 // Neopixel settings
 const int numLeds = 420; // change for your setup
@@ -65,38 +60,10 @@ ScrollingText middleTextMiddle(&ledMatrix);
 // connect to wifi – returns true if successful or false if not
 boolean ConnectWifi(void)
 {
-  boolean state = true;
-  int i = 0;
-
-  WiFi.begin(ssid, password);
-  Serial.println("");
-  Serial.println("Connecting to WiFi");
-  
-  // Wait for connection
-  Serial.print("Connecting");
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-    if (i > 20){
-      state = false;
-      break;
-    }
-    i++;
-  }
-  if (state){
-    Serial.println("");
-    Serial.print("Connected to ");
-    Serial.println(ssid);
-    Serial.print("IP address: ");
-    Serial.println(WiFi.localIP());
-    Serial.print("MAC: ");
-    Serial.println(WiFi.macAddress());
-  } else {
-    Serial.println("");
-    Serial.println("Connection failed.");
-  }
-  
-  return state;
+  WiFiManager wifiManager;
+  wifiManager.autoConnect();
+  Serial.println("connected...yeey :)");
+  return true;
 }
 
 //void initTest()
