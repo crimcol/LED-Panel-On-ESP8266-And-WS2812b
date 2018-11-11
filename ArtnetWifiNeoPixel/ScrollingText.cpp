@@ -4,37 +4,6 @@
 
 #include "ScrollingText.h"
 
-void ScrollingText::WaitIncrement(int ms)
-{
-	this->currentWaitMs += ms;
-}
-
-bool ScrollingText::IsWaitCompleted(int targetMs)
-{
-	if (this->currentWaitMs >= targetMs)
-	{
-		return true;
-	}
-	return false;
-}
-
-bool ScrollingText::IsWaitCompleted(int incrementMs, int targetMs)
-{
-	if (targetMs == 0)
-	{
-		return false;
-	}
-
-	WaitIncrement(incrementMs);
-	if (IsWaitCompleted(targetMs))
-	{
-		currentWaitMs = currentWaitMs % targetMs;
-		Serial.println("Wait completed.");
-		return true;
-	}
-	return false;
-}
-
 ScrollingText::ScrollingText(Adafruit_NeoMatrix * matrix)
 {
 	TextColor = matrix->Color(0, 255, 0);
@@ -49,7 +18,7 @@ void ScrollingText::SetText(String text)
 
 void ScrollingText::OnUpdate(int ms)
 {
-	if (IsWaitCompleted(ms, TargetSpeedMs))
+	if (this->scrollingEvent.IsWaitCompleted(ms, TargetSpeedMs))
 	{
 		PositionX--;
 
@@ -68,4 +37,3 @@ void ScrollingText::Render(Adafruit_NeoMatrix * matrix)
 	matrix->setCursor(PositionX, PositionY);
 	matrix->print(this->Text);
 }
-

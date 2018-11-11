@@ -10,6 +10,7 @@
 #endif
 
 #include "RenderObject.h"
+#include "TimeEvent.h"
 
 class ScrollingText : public RenderObject
 {
@@ -17,12 +18,7 @@ private:
 	//int currentTextPosition;
 	int textPixelLength = 0;
 	String Text;
-
-	int targetWaitMs = 500;
-	int currentWaitMs = 0;
-	void WaitIncrement(int ms);
-	bool IsWaitCompleted(int incrementMs, int targetMs);
-	bool IsWaitCompleted(int targetMs);
+  TimeEvent scrollingEvent;
 
 public:
 	int PositionY = 0;
@@ -42,4 +38,3 @@ public:
 };
 
 #endif
-

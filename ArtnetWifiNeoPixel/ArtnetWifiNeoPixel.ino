@@ -11,9 +11,9 @@ This example may be copied under the terms of the MIT license, see the LICENSE f
 #include <ESP8266WiFi.h>
 #endif
 
-#include "ArtnetWifi.h"
 #include "RenderEngine.h"
 #include "ScrollingText.h"
+#include "RandomPoint.h"
 #include <Ticker.h>
 #include <WiFiUdp.h>
 #include <Adafruit_GFX.h>
@@ -39,16 +39,6 @@ Adafruit_NeoMatrix ledMatrix = Adafruit_NeoMatrix(30, 14, dataPin,
   NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG,
   NEO_GRB            + NEO_KHZ800);
 
-// Artnet settings
-ArtnetWifi artnet;
-const int startUniverse = 0; // CHANGE FOR YOUR SETUP most software this is 1, some software send out artnet first universe as 0.
-
-// Check if we got all universes
-const int maxUniverses = numberOfChannels / 512 + ((numberOfChannels % 512) ? 1 : 0);
-bool universesReceived[maxUniverses];
-bool sendFrame = 1;
-int previousDataLength = 0;
-
 //RenderObjects
 const int tickerMs = 40;
 Ticker frameTicker;
@@ -56,6 +46,7 @@ RenderEngine renderEngine(&ledMatrix);
 ScrollingText scrollingText(&ledMatrix);
 ScrollingText scrollingTextLine2(&ledMatrix);
 ScrollingText middleTextMiddle(&ledMatrix);
+RandomPoint randomPoint(&ledMatrix);
 
 // connect to wifi – returns true if successful or false if not
 boolean ConnectWifi(void)
@@ -102,67 +93,6 @@ void showText(String text){
   ledMatrix.show();
 }
 
-void scrollText(String textToDisplay) {
-  int x = ledMatrix.width();
-  
-  // Account for 6 pixel wide characters plus a space
-  int pixelsInText = textToDisplay.length() * 6;
-
-  ledMatrix.setTextWrap(false);
-  ledMatrix.setCursor(x, 0);
-  ledMatrix.print(textToDisplay);
-  ledMatrix.show();
-  
-  while(x > (ledMatrix.width() - pixelsInText)) {
-    ledMatrix.fillScreen(ledMatrix.Color(0, 0, 0));
-    ledMatrix.setCursor(--x, 0);
-    ledMatrix.print(textToDisplay);
-    ledMatrix.show();
-    delay(100);
-  }
-}
-
-//void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t* data)
-//{
-//  sendFrame = 1;
-//  // set brightness of the whole strip 
-//  if (universe == 15)
-//  {
-//    leds.setBrightness(data[0]);
-//    leds.show();
-//  }
-//
-//  // Store which universe has got in
-//  if ((universe - startUniverse) < maxUniverses)
-//    universesReceived[universe - startUniverse] = 1;
-//
-//  for (int i = 0 ; i < maxUniverses ; i++)
-//  {
-//    if (universesReceived[i] == 0)
-//    {
-//      //Serial.println("Broke");
-//      sendFrame = 0;
-//      break;
-//    }
-//  }
-//
-//  // read universe and put into the right part of the display buffer
-//  for (int i = 0; i < length / 3; i++)
-//  {
-//    int led = i + (universe - startUniverse) * (previousDataLength / 3);
-//    if (led < numLeds)
-//      leds.setPixelColor(led, data[i * 3], data[i * 3 + 1], data[i * 3 + 2]);
-//  }
-//  previousDataLength = length;     
-//  
-//  if (sendFrame)
-//  {
-//    leds.show();
-//    // Reset universeReceived to 0
-//    memset(universesReceived, 0, maxUniverses);
-//  }
-//}
-
 void setupHttpUpdate()
 {
   httpUpdater.setup(&httpServer);
@@ -174,8 +104,6 @@ void setupHttpUpdate()
 
 static const char updateTextHtml[] PROGMEM =
         R"(<html><body><form method='POST' action='command' enctype='multipart/form-data'>
-                  <input type='text' name='text' placeholder='Any text'>
-                  <br/>
                   <input type='text' name='scrolltext' placeholder='Scrolling text'>
                   <br/>
 			      <input type='text' name='middletext' placeholder='Middle text'>
@@ -191,14 +119,9 @@ void handleRoot() {
 }
 
 void handleCommand() {
-  String argText = httpServer.arg("text");
   String argScrollText = httpServer.arg("scrolltext");
   String argMiddleText = httpServer.arg("middletext");
   String argScrollText2 = httpServer.arg("scrolltext2");
-
-  if(argText.length() > 0){
-    showText(argText);
-  }
 
   scrollingText.SetText(argScrollText);
   middleTextMiddle.SetText(argMiddleText);
@@ -217,15 +140,10 @@ void setup()
   ledMatrix.begin();
   showText("Wifi...");
   ConnectWifi();
-  //artnet.begin();
-  //leds.begin();
   //initTest();
   initTest2();
   setupHttpUpdate();
   
-  // this will be called for each packet received
-  //artnet.setArtDmxCallback(onDmxFrame);
-
   scrollingText.SetText("scrolling test text");
 
   scrollingTextLine2.SetText("Line 2");
@@ -242,6 +160,7 @@ void setup()
   renderEngine.AddObject(&scrollingText);
   renderEngine.AddObject(&scrollingTextLine2);
   renderEngine.AddObject(&middleTextMiddle);
+  renderEngine.AddObject(&randomPoint);
 
   frameTicker.attach_ms(tickerMs, frameUpdate);
 
@@ -251,6 +170,4 @@ void setup()
 void loop()
 {
   httpServer.handleClient();
-  // we call the read function inside the loop
-  //artnet.read();
 }
