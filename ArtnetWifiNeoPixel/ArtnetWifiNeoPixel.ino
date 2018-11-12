@@ -20,6 +20,7 @@ This example may be copied under the terms of the MIT license, see the LICENSE f
 #include <Adafruit_NeoMatrix.h>
 #include <Adafruit_NeoPixel.h>
 
+#include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266HTTPUpdateServer.h>
 #include <WiFiManager.h> 
@@ -54,6 +55,7 @@ boolean ConnectWifi(void)
   WiFiManager wifiManager;
   wifiManager.autoConnect();
   Serial.println("connected...yeey :)");
+  scrollingTextLine2.SetText(WiFi.localIP().toString());
   return true;
 }
 
@@ -146,7 +148,6 @@ void setup()
   
   scrollingText.SetText("scrolling test text");
 
-  scrollingTextLine2.SetText("Line 2");
   scrollingTextLine2.TargetSpeedMs = 40;
   scrollingTextLine2.PositionY = 7;
   scrollingTextLine2.TextColor = ledMatrix.Color(0, 255, 255);
